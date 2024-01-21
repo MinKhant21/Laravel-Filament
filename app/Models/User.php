@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Str;
+use Filament\Panel;
 
 class User extends Authenticatable
 {
@@ -18,9 +20,13 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'id',
         'name',
         'email',
         'password',
+        'address',
+        'phone',
+        'role',
     ];
 
     /**
@@ -41,5 +47,24 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'id' => 'string'
     ];
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            $model->id = Str::uuid();
+        });
+    }
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // return str_ends_with($this->email, '@gmail.com') && $this->hasVerifiedEmail();
+        return true;
+    }
 }

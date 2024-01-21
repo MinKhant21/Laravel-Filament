@@ -2,22 +2,25 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\PatientResource\Pages;
-use App\Filament\Resources\PatientResource\RelationManagers;
-use App\Models\Patient;
+use App\Filament\Resources\UserResource\Pages;
+use App\Filament\Resources\UserResource\RelationManagers;
+use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Str;
 
-class PatientResource extends Resource
+class UserResource extends Resource
 {
-    protected static ?string $model = Patient::class;
+    protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -25,31 +28,30 @@ class PatientResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')->required(),
-                Forms\Components\DatePicker::make('date_of_birth')->required()->maxDate(now()),
-                Forms\Components\Select::make('type')
-                ->options([
-                    'cat' => 'cat',
-                    'dog' => 'dog',
-                    'bird' => 'bird',
-                ]),
-                Forms\Components\Select::make('owner_id')
-                ->relationship('owner','name')
-                ->required()
+                TextInput::make('name')->required(),
+                TextInput::make('email')->required()->email(),
+                TextInput::make('phone')->required()->tel(),
+                TextInput::make('address')->required(),
+                TextInput::make('password')->required()->password()->visibleOn('create'),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->query(User::query()->whereNot('role', 'admin'))
             ->columns([
                 TextColumn::make('name')->searchable(),
-                TextColumn::make('type')->searchable(),
-                TextColumn::make('owner.name')->searchable(),
-                TextColumn::make('date_of_birth')->searchable(),
+                TextColumn::make('email')->searchable(),
+                TextColumn::make('phone')->searchable(),
+                TextColumn::make('address')->searchable(),
             ])
             ->filters([
-                //
+                SelectFilter::make('address')
+                ->options([
+                    'ygn' => 'ygn',
+                    'mdy' => 'mdy',
+                ])
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -71,9 +73,9 @@ class PatientResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPatients::route('/'),
-            'create' => Pages\CreatePatient::route('/create'),
-            'edit' => Pages\EditPatient::route('/{record}/edit'),
+            'index' => Pages\ListUsers::route('/'),
+            'create' => Pages\CreateUser::route('/create'),
+            'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }
 }
